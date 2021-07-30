@@ -25,32 +25,13 @@ class Player():
         return self.X_cord, self.Z_cord
 
 
-
-class Place():
-    def __init__(self, x_cord_from, x_cord_to, y_cord_from, y_cord_to, name_channel):
-
-        self.x_cord_from = x_cord_from
-        self.x_cord_to   = x_cord_to
-        self.y_cord_form = y_cord_from
-        self.y_cord_to   = y_cord_to
-        self.name_channel = name_channel
-
-        self.players_in_place = []
-
-    def set_player(self, players):
-        self.players_in_place.append(players)
-
-    def remove_player(self, player):
-        self.players_in_place.pop(player)
-
-
 class Bot(Client):
 
     db = DB('db.db')
 
     server_id = 0
     category_id = 0
-    
+ 
 
     def download_players(self):
         self.players = []
@@ -73,7 +54,6 @@ class Bot(Client):
 
         self.connect_to_db()
         self.download_players()
-        #self.download_places()
         
 
     async def on_ready(self):
@@ -131,6 +111,8 @@ class Bot(Client):
                     return channel
 
 
+
+    
 
     @tasks.loop(seconds=0.5)
     async def set_players_cords(self):
