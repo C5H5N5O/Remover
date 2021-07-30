@@ -190,4 +190,4 @@ class Bot(Client):
 
 client = Bot()
 client.start_loop()
-client.run("ODA4Mzg2MjIzMjEwMjMzODY2.YCFyVg.QzlmRUuSANMzKLcCybLu8wa9RlE")
+client.run("Token")
