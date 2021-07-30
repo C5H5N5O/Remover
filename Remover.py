@@ -9,7 +9,7 @@ from db import DB
 
 class Player():
 
-    def __init__(self, id, discord, X, Z, nick='Ananas_klemente'):
+    def __init__(self, id, discord, X, Z, nick):
         
         self.id = id
         self.discord = discord
@@ -126,7 +126,7 @@ class Bot(Client):
         await self.wait_until_ready()
 
         
-        # чтобы не проверять одних и тех же игроков по несколько раз все 
+        # чтобы не проверять одних и тех же игроков по несколько раз всe
         # уже проверенные игроки будут записываться сюда и пропускаться
         already_checked = []
 
