@@ -48,8 +48,8 @@ class Bot(Client):
 
     db = DB('db.db')
 
-    server_id = 646774485881585670
-    category_id = 852125200232742912
+    server_id = 0
+    category_id = 0
     
 
     def download_players(self):
@@ -91,8 +91,7 @@ class Bot(Client):
             self.players[i].set_cords(data[i][2], data[i][3])
 
 
-    # ищит всех людей, находящихся недалеко от переданного игрока
-    # оно работает
+    # возвращает всех людей, находящихся недалеко от переданного игрока
     def find_players_nearly(self, main_player, players_nearly_each_other = [], already_checked=[], distance=50):
         
         if main_player not in already_checked:
@@ -112,8 +111,8 @@ class Bot(Client):
 
         return players_nearly_each_other
 
-    # возвращает канал в котором собранно хотябы половину от всех игроков, находящихся в одной 
-    # зоне, если такого нет, возвращает None
+    # возвращает канал в котором собраннa хотябы четверть от всех игроков, находящихся в одной 
+    # зоне, если такого канала нет, ничего не возвращает, в дальнейшем он будет создан
     def find_channel_to_remove(self, players):
         
         members_in_channels = 0
@@ -145,7 +144,8 @@ class Bot(Client):
         await self.wait_until_ready()
 
         
-        #чтобы не проверять одних и тех же игроков по несколько раз все игроки будут записываться сюда и пропускаться
+        # чтобы не проверять одних и тех же игроков по несколько раз все 
+        # уже проверенные игроки будут записываться сюда и пропускаться
         already_checked = []
 
         for player in self.players:
@@ -158,27 +158,17 @@ class Bot(Client):
                 already_checked.append(pl)
 
             
-            channel_to_remove = self.find_channel_to_remove(players_nearly_each_other)
+            channel = self.find_channel_to_remove(players_nearly_each_other)
             
             # в случае если нет каналов с большим сосредоточением нужных игроков, то создаётся новый канал
-            if channel_to_remove == None:
+            if channel == None:
                 channel_name = players_nearly_each_other[0].get_cords
 
-                channel_to_remove = await self.server.create_voice_channel(name=f'{channel_name}', category=self.category)
+                channel = await self.server.create_voice_channel(name=f'{channel_name}', category=self.category)
 
             # перемещение игркоков в канал 
             for pl in players_nearly_each_other:
-                await pl.discord.move_to(channel_to_remove)
-
-
-            musorka = "." # какнал в который будут перемещаться игроки покинувшие зону слышимости 
-
-            # удаление игроков, покинувших зону слышимости
-            for member in channel_to_remove.members: ###
-                for player in players_nearly_each_other:
-                    if member == player.discord:
-                        continue
-                await member.move_to(musorka)
+                await pl.discord.move_to(channel)
 
 
 
