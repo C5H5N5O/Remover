@@ -3,7 +3,6 @@ import sqlite3 as sql
 
 class DB:
 
-
     def __init__(self, name):
         self.name = name
 
