@@ -31,18 +31,8 @@ class Bot(Client):
 
     server_id = 0
     category_id = 0
- 
-
-    def download_players(self):
-        self.players = []
-        for row in self.db.get_all_data_from('players'):
-            self.players.append(Player(
-                id      = row[0], 
-                discord = get(row[1]),
-                X       = row[2],
-                Z       = row[3],
-                nick    = row[4]
-            ))
+    
+    players = []
 
 
     def connect_to_db(self):
@@ -64,12 +54,23 @@ class Bot(Client):
         print('ready')
 
 
-    def set_players_cords_from_db(self):
+    def set_players_and_cords(self):
         data = self.db.get_all_data_from('players')
 
-        for i in range(len(data)):
-            self.players[i].set_cords(data[i][2], data[i][3])
+        # берётся информция из базы данных и обнавляются координаты всех игроков, 
+        # в случае исли в базе данных появился новый игрок (зарегистрировался) он добавляется в массив игроков
+        for player_index in range(len(data)):
+            try:
+                self.players[player_index].set_cords(data[player_index][2], data[player_index][3])
+            except IndexError:
 
+                self.players.append(Player(
+                    id      = data[player_index][0], 
+                    discord = get(data[player_index][1]),
+                    X       = data[player_index][2],
+                    Z       = data[player_index][3],
+                    nick    = data[player_index][4]
+                ))
 
     # возвращает всех людей, находящихся недалеко от переданного игрока
     def find_players_nearly(self, main_player, players_nearly_each_other = [], already_checked=[], distance=50):
@@ -117,7 +118,7 @@ class Bot(Client):
     @tasks.loop(seconds=0.5)
     async def set_players_cords(self):
         await self.wait_until_ready()
-        self.set_players_cords_from_db()
+        self.set_players_and_cords()
 
 
     
