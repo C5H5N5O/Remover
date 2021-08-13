@@ -10,19 +10,9 @@ from db import DB
 class Player():
 
     def __init__(self, id, discord, X, Z, nick):
-        
         self.id = id
         self.discord = discord
-        self.X_cord = X
-        self.Z_cord = Z
-        self.nick = nick
 
-    def set_cords(self, X, Z):
-        self.X_cord = X
-        self.Z_cord = Z
-
-    def get_cords(self):
-        return self.X_cord, self.Z_cord
 
 
 class Bot(Client):
@@ -33,7 +23,6 @@ class Bot(Client):
     category_id = 0
     
     players = []
-
 
     def connect_to_db(self):
         self.db.connect()
@@ -54,43 +43,33 @@ class Bot(Client):
         print('ready')
 
 
-    def set_players_and_cords(self):
+    @tasks.loop(second=100)
+    async def set_new_players(self):
         data = self.db.get_all_data_from('players')
 
         # берётся информция из базы данных и обнавляются координаты всех игроков, 
         # в случае исли в базе данных появился новый игрок (зарегистрировался) он добавляется в массив игроков
         for player_index in range(len(data)):
             try:
-                self.players[player_index].set_cords(data[player_index][2], data[player_index][3])
-            except IndexError:
+                self.players[player_index]
 
+            except IndexError:
+                
                 self.players.append(Player(
                     id      = data[player_index][0], 
                     discord = get(data[player_index][1]),
-                    X       = data[player_index][2],
-                    Z       = data[player_index][3],
-                    nick    = data[player_index][4]
                 ))
 
-    # возвращает всех людей, находящихся недалеко от переданного игрока
-    def find_players_nearly(self, main_player, players_nearly_each_other = [], already_checked=[], distance=50):
-        
-        if main_player not in already_checked:
-            players_nearly_each_other.append(main_player)
-            already_checked.append(main_player) 
 
-        for player in self.players:
-            if main_player != player:
-                if player not in already_checked:
-                    if main_player.get_cords()[0] - player.get_cords()[0] <= distance \
-                        and main_player.get_cords()[1] - player.get_cords()[1] <= distance \
-                    or player.get_cords()[0] - main_player.get_cords()[0] <= distance \
-                        and player.get_cords()[1] - main_player.get_cords()[1] <= distance:
-                            already_checked.append(player)
-                            players_nearly_each_other.append(player)
-                            self.find_players_nearly(player, players_nearly_each_other, already_checked)
-
-        return players_nearly_each_other
+    def get_players_need_to_remove(self):
+        players_to_remove = []
+        for id in range(len(self.players)):
+            players_to_remove.append[[self.players[id].discord]]
+            others_id = self.db.get_all_data_from(f'{self.players[id]}')
+            for other_id in others_id:
+                players_to_remove[id].append(self.players[other_id].discord)
+            
+            
 
     # возвращает канал в котором собраннa хотябы четверть от всех игроков, находящихся в одной 
     # зоне, если такого канала нет, ничего не возвращает, в дальнейшем он будет создан
@@ -111,18 +90,8 @@ class Bot(Client):
                 if members_in_channels > members_need_to_remove:
                     return channel
 
-
-
     
-
-    @tasks.loop(seconds=0.5)
-    async def set_players_cords(self):
-        await self.wait_until_ready()
-        self.set_players_and_cords()
-
-
-    
-    @tasks.loop(seconds=1)
+    @tasks.loop(seconds=2)
     async def remove_in_all_places(self):
         await self.wait_until_ready()
 
@@ -131,12 +100,12 @@ class Bot(Client):
         # уже проверенные игроки будут записываться сюда и пропускаться
         already_checked = []
 
-        for player in self.players:
-            
-            if player in already_checked: continue
+        
 
-            players_nearly_each_other = self.find_players_nearly(player)
-            
+        players_nearly_each_other = self.get_players_need_to_remove()
+        
+        for player in players_nearly_each_other:
+
             for pl in players_nearly_each_other:
                 already_checked.append(pl)
 
