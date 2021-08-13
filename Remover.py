@@ -47,8 +47,6 @@ class Bot(Client):
     async def set_new_players(self):
         data = self.db.get_all_data_from('players')
 
-        # берётся информция из базы данных и обнавляются координаты всех игроков, 
-        # в случае исли в базе данных появился новый игрок (зарегистрировался) он добавляется в массив игроков
         for player_index in range(len(data)):
             try:
                 self.players[player_index]
