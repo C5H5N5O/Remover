@@ -55,11 +55,13 @@ class Bot(Client):
                 
                 self.players.append(Player(
                     id      = data[player_index][0], 
-                    discord = get(data[player_index][1]),
+                    discord = get_discord_by_nick(data[player_index][1]),
                 ))
 
+    def get_discord_by_nick(self, nick):
+        return get(nick)
 
-    def get_groups_of_plsyers(self):
+    def get_groups_of_players(self):
         groups = []
 
         groups_data = DB.get_data_from("group_of_players")
@@ -110,24 +112,20 @@ class Bot(Client):
 
         
 
-        players_nearly_each_other = self.get_players_need_to_remove()
+        groups_of_players = self.get_groups_of_players()
         
-        for player in players_nearly_each_other:
-
-            for pl in players_nearly_each_other:
-                already_checked.append(pl)
-
+        for grop_of_players in groups_of_players:
             
-            channel = self.find_channel_to_remove(players_nearly_each_other)
+            channel = self.find_channel_to_remove(grop_of_players)
             
             # в случае если нет каналов с большим сосредоточением нужных игроков, то создаётся новый канал
             if channel == None:
-                channel_name = players_nearly_each_other[0].get_cords
+                channel_name = grop_of_players[0].get_cords
 
                 channel = await self.server.create_voice_channel(name=f'{channel_name}', category=self.category)
 
             # перемещение игркоков в канал 
-            for pl in players_nearly_each_other:
+            for pl in grop_of_players:
                 await pl.discord.move_to(channel)
 
 
