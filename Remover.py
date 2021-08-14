@@ -105,13 +105,6 @@ class Bot(Client):
     async def remove_in_all_places(self):
         await self.wait_until_ready()
 
-        
-        # чтобы не проверять одних и тех же игроков по несколько раз всe
-        # уже проверенные игроки будут записываться сюда и пропускаться
-        already_checked = []
-
-        
-
         groups_of_players = self.get_groups_of_players()
         
         for grop_of_players in groups_of_players:
