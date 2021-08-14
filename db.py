@@ -10,7 +10,7 @@ class DB:
         con = sql.connect(self.name)
         self.cur = con.cursor()
 
-    def get_all_data_from(self, table):
+    def get_data_from(self, table):
         self.cur.execute(f"SELECT * FROM '{table}'")
         rows = self.cur.fetchall()
         return rows

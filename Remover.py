@@ -59,15 +59,25 @@ class Bot(Client):
                 ))
 
 
-    def get_players_need_to_remove(self):
-        players_to_remove = []
-        for id in range(len(self.players)):
-            players_to_remove.append[[self.players[id].discord]]
-            others_id = self.db.get_all_data_from(f'{self.players[id]}')
-            for other_id in others_id:
-                players_to_remove[id].append(self.players[other_id].discord)
-            
-            
+    def get_groups_of_plsyers(self):
+        groups = []
+
+        groups_data = DB.get_data_from("group_of_players")
+
+        for index in range(len(groups_data)):
+            groups.append([])
+            group = groups_data[index]
+            for player_id in group:
+                groups[index].append(self.get_player_by_id(int(player_id)))
+
+
+    def get_player_by_id(self, id):
+        
+        for player in self.players:
+            if player.id == id:
+                return player
+
+        raise "ERROR, cant find player with matched id"
 
     # возвращает канал в котором собраннa хотябы четверть от всех игроков, находящихся в одной 
     # зоне, если такого канала нет, ничего не возвращает, в дальнейшем он будет создан
