@@ -24,6 +24,7 @@ class Bot(Client):
     
     players = []
 
+
     def connect_to_db(self):
         self.db.connect()
 
@@ -45,30 +46,42 @@ class Bot(Client):
 
     @tasks.loop(second=100)
     async def set_new_players(self):
+
         data = self.db.get_all_data_from('players')
 
         for player_index in range(len(data)):
-            try:
-                self.players[player_index]
+            
+            founded = False
 
-            except IndexError:
-                
+            for player in self.players:
+
+                if player.id == data[player_index][0]:
+                    founded = True
+                    break
+
+            if not founded:
                 self.players.append(Player(
                     id      = data[player_index][0], 
                     discord = get_discord_by_nick(data[player_index][1]),
                 ))
 
+
     def get_discord_by_nick(self, nick):
         return get(nick)
+
 
     def get_groups_of_players(self):
         groups = []
 
+            # в groups_data находиться набор массивов, каждый каждый из которых представляет
+            # из себя набор находящихся рядом друг с другом игроков, (игроки записаны по id)
         groups_data = DB.get_data_from("group_of_players")
 
         for index in range(len(groups_data)):
+
             groups.append([])
             group = groups_data[index]
+
             for player_id in group:
                 groups[index].append(self.get_player_by_id(int(player_id)))
 
@@ -79,7 +92,8 @@ class Bot(Client):
             if player.id == id:
                 return player
 
-        raise "ERROR, cant find player with matched id"
+        raise f"ERROR, cant find player with id {id}"
+
 
     # возвращает канал в котором собраннa хотябы четверть от всех игроков, находящихся в одной 
     # зоне, если такого канала нет, ничего не возвращает, в дальнейшем он будет создан
@@ -122,12 +136,9 @@ class Bot(Client):
                 await pl.discord.move_to(channel)
 
 
-
-
     def start_loop(self):
         self.loop.create_task(self.set_players_cords())
         self.loop.create_task(self.remove_in_all_places())
-
 
 client = Bot()
 client.start_loop()
