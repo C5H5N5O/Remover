@@ -29,13 +29,14 @@ class Bot(Client):
         self.db.connect()
 
 
-    def __init__(self):
+    def __init__(self, server, category):
         super().__init__()
 
         self.connect_to_db()
 
-    async def on_ready(self):
 
+    async def on_ready(self):
+        
         self.server = self.get_guild(id=self.server_id)
         self.category = get(self.server.categories, id=self.category_id)
         
@@ -93,8 +94,6 @@ class Bot(Client):
         raise f"ERROR, cant find player with id {id}"
 
 
-    # возвращает канал в котором собраннa хотябы четверть от всех игроков, находящихся в одной 
-    # зоне, если такого канала нет, ничего не возвращает, в дальнейшем он будет создан
     def get_channel_to_remove(self, players, channel_name=None):
         
         members_in_channels = 0
@@ -137,15 +136,14 @@ class Bot(Client):
             
             channel = self.get_channel_to_remove(grop_of_players)
 
-            # перемещение игркоков в канал 
             for pl in grop_of_players:
                 await pl.discord.move_to(channel)
 
 
-    def start_loop(self):
+    def create_loop(self):
         self.loop.create_task(self.remove_players_in_channels())
         self.loop.create_task(self.set_new_players())
 
 client = Bot()
-client.start_loop()
+client.create_loop()
 client.run("TOKEN")
