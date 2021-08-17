@@ -12,7 +12,7 @@ class Player():
     def __init__(self, id, discord):
         self.id = id
         self.discord = discord
-
+        self.in_rp = False
 
 
 class Bot(Client):
@@ -25,14 +25,13 @@ class Bot(Client):
     players = []
 
 
-    def connect_to_db(self):
-        self.db.connect()
-
-
     def __init__(self, server, category):
         super().__init__()
 
-        self.connect_to_db()
+        server_id = server
+        category_id = category
+
+        self.db.connect()
 
 
     async def on_ready(self):
@@ -43,25 +42,31 @@ class Bot(Client):
         print('ready')
 
 
-    @tasks.loop(seconds=100)
-    async def set_new_players(self):
+    @tasks.loop(seconds=1)
+    async def set_new_players_and_check_if_player_in_rp(self):
 
         data = self.db.get_data_from('players')
 
-        for player_index in range(len(data)):
+        for player_from_db in range(len(data)):
             
             founded = False
 
             for player in self.players:
+                
+                for channel in self.server.channels:
+                    if str(channel.type) == 'voice' and channel.category == self.category:
+                        for member in channel.members:
+                            if member == player.discord:
+                                player.in_rp = True
 
-                if player.id == data[player_index][0]:
+                if player.id == player_from_db[0]:
                     founded = True
                     break
 
             if not founded:
                 self.players.append(Player(
-                    id      = data[player_index][0], 
-                    discord = self.get_discord_by_nick(data[player_index][1]),
+                    id      = player_from_db[0], 
+                    discord = self.get_discord_by_nick(player_from_db[1]),
                 ))
 
 
@@ -97,7 +102,6 @@ class Bot(Client):
     def get_channel_to_remove(self, players, channel_name=None):
         
         members_in_channels = 0
-        members_need_to_remove = len(players) / 4
 
         members_in_group = {}
 
@@ -126,18 +130,20 @@ class Bot(Client):
                 return members_in_channels.keys()[i]
 
     
+                
     @tasks.loop(seconds=2)
     async def remove_players_in_channels(self):
         await self.wait_until_ready()
 
         groups_of_players = self.get_groups_of_players()
-        
+
         for grop_of_players in groups_of_players:
             
             channel = self.get_channel_to_remove(grop_of_players)
 
             for pl in grop_of_players:
-                await pl.discord.move_to(channel)
+                if pl.in_rp:
+                    await pl.discord.move_to(channel)
 
 
     def create_loop(self):
